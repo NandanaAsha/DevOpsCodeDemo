@@ -1,0 +1,41 @@
+pipeline{
+    tools {
+        maven 'mymaven' 
+        
+    }
+    agent any
+    stages {
+        stage ('Clone source code and docker file')
+        {
+            steps {
+               git 'https://github.com/NandanaAsha/DevOpsCodeDemo.git'  
+            }
+            
+        }
+        stage('Package source code')
+        {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage ('copy artifact to jenkins workspace sub directory')
+        {
+            steps {
+                sh 'cp  /var/lib/jenkins/workspace/JenkinsDockerIntegrate/target/addressbook.war .'
+            }
+        }
+        stage ('Build image')
+        {
+            steps {
+                sh 'docker build -t addressbookimg:V$BUILD_NUMBER .'
+            }
+        }
+        stage ('Deploy addressbook application in container')
+        {
+            steps {
+                sh 'docker run -d --name addressbookapp_$BUILD_NUMBER -P addressbookimg:V$BUILD_NUMBER'
+            }
+        }
+    }
+    
+}
